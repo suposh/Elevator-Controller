@@ -7,17 +7,6 @@ InterruptFloorNew =  -1
 InterruptFloorOld =  -1
 ChangeDetected =  0
 
-def ISR(Obj):
-			# global InterruptFloorNew
-			# global ChangeDetected
-			# InterruptFloorNew = IOMap.findFloorFromPin(InterruptFloorNew)
-			#
-			# if InterruptFloorNew == InterruptFloorOld :
-			# 	ChangeDetected = 0
-			# else:
-			# 	ChangeDetected = 1
-			pass
-
 def callback(Object):
 			pin = str(Object)
 			pin = pin.split('(')
@@ -117,29 +106,13 @@ class Motion:
 Level = [ FLOOR(27, 12, 35, 14, 26), FLOOR(25, 33, 32, 13, 34), FLOOR(2, 4, 5, 18, 19) ]
 
 
-# Level[0].InitiateInterrupt()
+
 
 Level[0].InitiateInterrupt()
 Level[1].InitiateInterrupt()
 Level[2].InitiateInterrupt()
 
 while True:
-	# global MotionQueue
-	# global InterruptFloorNew
-	# global InterruptFloorOld
-	# global ChangeDetected
-	# MotionQueue
-	# InterruptFloorNew
-	# InterruptFloorOld
-	# ChangeDetected
-
-
-	# InterruptFloorNew = IOMap.findFloorFromPin(InterruptFloorNew)
-	#
-	# if InterruptFloorNew == InterruptFloorOld :
-	# 	ChangeDetected = 0
-	# else:
-	# 	ChangeDetected = 1
 
 	if ChangeDetected == True :				#		<------
 		# time.sleep_ms(400)
@@ -168,11 +141,6 @@ while True:
 			ChangeDetected = 0
 			machine.enable_irq(state)
 			# just ignore the interrupt
-
-		# print("InterruptFloor"+str(IOMap.findFloorFromPin(InterruptFloorNew)))
-		# MotionQueue.pop()
-
-		# print("Interrupt has occurred:" + str(totalInterruptsCounter))
 
 		print(MotionQueue)
 
