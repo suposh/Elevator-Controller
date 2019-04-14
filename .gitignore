@@ -1,1 +1,10 @@
+.gitignore
+Attempt2.py
+ESP32-DOIT-DEVKIT-V1-Board-Pinout-30-GPIOs-Copy.jpg
+boot.py
+interruptexample/
+iteratot/
+lift.py
+main.backup.py
 main.backup2.py
+

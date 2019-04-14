@@ -2,6 +2,8 @@ import micropython
 import machine
 import time
 
+# exec(open('/main.py').read().globals())
+
 MotionQueue    = []
 InterruptFloorNew =  -1
 InterruptFloorOld =  -1
@@ -145,5 +147,5 @@ while True:
 		print(MotionQueue)
 
 	else:
-		# Goto Ground floor
 		pass
+		# Goto Ground floor
