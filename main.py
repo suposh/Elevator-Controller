@@ -102,19 +102,20 @@ class Motor:
     self.open.value(0)
     self.close.value(1)
 
-  def Pwm(self,motorTime):
+  def Pwm(self, motorTime, doorDuty):
     t = time.ticks_ms()
-    pwm1 = machine.PWM(self.start, freq=5000, duty=6500)
+    pwm1 = machine.PWM(self.start, freq=4000, duty=doorDuty)
     while time.ticks_ms() - t < motorTime:
         pass
     pwm1.deinit()
 
 def doorAction(motor):
     motor.Open()
-    motor.Pwm(3000)
+	#motor.Pwm(Pwn timer, Duty)
+    motor.Pwm(3000, 435)
     time.sleep(4000)
     motor.Close()
-    motor.Pwm(3000)
+    motor.Pwm(3000, 435)
 
 
 def addToMotionQueue(floorToAdd):
@@ -184,7 +185,7 @@ MotorArray = [Motor(36,39,16),Motor(36,39,21),Motor(36,39,22),Motor(3,17,23)]
 #(self, floorNum, openR, closeR, cabinB, floorB, lift_FloorR)
 Level = [ FLOOR(27, 12, 32, 26), FLOOR(25, 33, 33, 34), FLOOR(2, 4, 35, 19) ]
 
-cabinLoc = 0 				#cabin location
+cabinLoc = 0 										#cabin location
 
 Level[0].InitiateInterrupt()
 Level[1].InitiateInterrupt()
@@ -198,15 +199,15 @@ while True:
 
 	    if floorButton > cabinLoc:
 	        while(Level[floorButton].liftLocation.value() != 1):
-	            MotorArray[3].Open() #Open = up
-	            MotorArray[3].Pwm(5000)
+	            MotorArray[3].Open() 				#Open = up
+	            MotorArray[3].Pwm(5000, 500)
 	        doorAction(MotorArray[floorButton])
 	        cabinLoc = floorButton
 
 	    elif floorButton < cabinLoc:
 	        while(Level[floorButton].liftLocation.value() != 1):
-	            MotorArray[3].Close() #Close = down
-	            MotorArray[3].Pwm(5000)
+	            MotorArray[3].Close() 				#Close = down
+	            MotorArray[3].Pwm(5000, 500)
 	            doorAction(MotorArray[floorButton])
 	        cabinLoc = floorButton
 
