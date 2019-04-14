@@ -60,8 +60,7 @@ class PINMap:
 				return i
 			i+=1
  # FLOOR(27, 12, 35, 14, 26), FLOOR(25, 33, 32, 13, 34), FLOOR(2, 4, 5, 18, 19)
-L= [[27, 12, 32, 26],[25, 33, 33, 34],[2, 4, 35, 19]]
-IOMap=PINMap(L, 3)
+
 
 
 class FLOOR:
@@ -183,7 +182,10 @@ def updateMotionQueueViaInterrupt():
 MotorArray = [Motor(36,39,16),Motor(36,39,21),Motor(36,39,22),Motor(3,17,23)]
 
 #(self, floorNum, openR, closeR, cabinB, floorB, lift_FloorR)
-Level = [ FLOOR(27, 12, 32, 26), FLOOR(25, 33, 33, 34), FLOOR(2, 4, 35, 19) ]
+Level = [ FLOOR(27, 12, 32, 26), FLOOR(25, 14, 33, 13), FLOOR(36, 39, 34, 35) ]
+
+L= [[27, 12, 32, 26],[25, 14, 33, 13],[36, 39, 34, 35]]
+IOMap=PINMap(L, 3)
 
 cabinLoc = 0 										#cabin location
 
