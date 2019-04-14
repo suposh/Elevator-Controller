@@ -13,8 +13,9 @@ class Motor:
     self.close.value(1)
   def Pwm(self,motorTime):
     t=time.ticks_ms()
-    while time.ticks_ms()-t=motorTime:
-      pwm1= machine.PWM(self.start, freq=5000, duty=6500)
+    pwm1= machine.PWM(self.start, freq=5000, duty=6500)
+    while time.ticks_ms()-t<motorTime:
+        pass
     pwm1.deinit()
 def doorAction(motor):
     motor.Open()
@@ -26,15 +27,10 @@ def doorAction(motor):
 motorArray=[Motor(36,39,23),Motor(36,39,22),Motor(36,39,21),Motor(3,17,16)]
 
 cabinLoc=0 #cabin location
-# while Level[z].liftLocation.value()!=1:
-# while MotionQueue=
-floorButton=MotionQueue[0]
-MotionQueue.reverse()
-MotionQueue.pop()
-MotionQueue.reverse()
 
-# Level[floorButton].floorCall.value(1)
-# Level[z].liftLocation.value()
+floorButton=MotionQueue[0]
+
+
 if floorButton>cabinLoc:
     while(Level[floorButton].liftLocation.value()!=1):
         motorArray[3].Open() #Open = up
@@ -50,3 +46,6 @@ elif floorButton<cabinLoc:
 else:
     doorAction(motorArray[floorButton])
     cabinLoc=floorButton
+MotionQueue.reverse()
+MotionQueue.pop()
+MotionQueue.reverse()
