@@ -92,21 +92,54 @@ class FLOOR:
 			self.cabinCall.irq(trigger = machine.Pin.IRQ_RISING, handler=callback)
 			self.floorCall.irq(trigger = machine.Pin.IRQ_RISING, handler=callback)
 
+class Motor:
+  def __init__(self,dirOne,dirTwo,Enable):
+    self.start = machine.Pin(Enable,machine.Pin.OUT)
+    self.open  = machine.Pin(dirOne,machine.Pin.OUT)
+    self.close = machine.Pin(dirTwo,machine.Pin.OUT)
 
+  def Open(self):
+    self.close.value(0)
+    self.open.value(1)
 
+  def Close(self):
+    self.open.value(0)
+    self.close.value(1)
 
-class Motion:
-	def VerticalMotionControl( ):
-		pass
+  def Pwm(self,motorTime):
+    t = time.ticks_ms()
+    pwm1 = machine.PWM(self.start, freq=5000, duty=6500)
+    while time.ticks_ms() - t < motorTime:
+        pass
+    pwm1.deinit()
 
-	def DoorControl():
-		pass
+def doorAction(motor):
+    motor.Open()
+    motor.Pwm(3000)
+    time.sleep(4000)
+    motor.Close()
+    motor.Pwm(3000)
 
+#level[0] motor, level[1] motor,  level[2] motor,  #cabinmotion
+MotorArray = [Motor(36,39,23),Motor(36,39,22),Motor(36,39,21),Motor(3,17,16)]
 
 #(self, floorNum, openR, closeR, cabinB, floorB, lift_FloorR)
-
 Level = [ FLOOR(27, 12, 35, 14, 26), FLOOR(25, 33, 32, 13, 34), FLOOR(2, 4, 5, 18, 19) ]
 
+def addToMotionQueue(floorToAdd):
+	global MotionQueue
+	global LOCK
+
+	if LOCK == 0:
+		LOCK = 1
+		MotionQueue.append(floorToAdd)
+		LOCK = 0
+	elif LOCK == 1:
+		while LOCK == 1:
+			pass
+		LOCK = 1
+		MotionQueue.append(floorToAdd)
+		LOCK = 0
 
 
 
@@ -124,7 +157,7 @@ while True:
 		if len(MotionQueue) == 0:
 			# print("len(MotionQueue) == 0")
 			# MotionQueue.clear()
-			MotionQueue.append(Floor)
+			addToMotionQueue(Floor)
 			InterruptFloorOld = InterruptFloorNew
 			ChangeDetected = 0
 			machine.enable_irq(state)
@@ -132,7 +165,7 @@ while True:
 
 		elif MotionQueue[len(MotionQueue)-1] != Floor :
 			# print("MotionQueue[len(MotionQueue)-1] != Floor :")
-			MotionQueue.append(Floor)
+			addToMotionQueue(Floor)
 			InterruptFloorOld = InterruptFloorNew
 			ChangeDetected = 0
 			machine.enable_irq(state)
