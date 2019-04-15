@@ -2,6 +2,7 @@ import micropython
 import machine
 import time
 import _thread
+import math
 
 # exec(open('/main.py').read().globals())
 
@@ -9,7 +10,8 @@ MotionQueue    = []
 InterruptFloorNew =  -1
 InterruptFloorOld =  -1
 ChangeDetected =  0
-LOCKING=0
+LOCK=0
+LOCKTIME = 20 # in MILISECONDs
 
 def callback(Object):
 			pin = str(Object)
@@ -20,26 +22,31 @@ def callback(Object):
 			global InterruptFloorNew
 			global ChangeDetected
 			global InterruptFloorOld
+			global MotionQueue
 			#micropython.schedule(ISR, pin)
 			InterruptFloorNew = pin
 
-			if InterruptFloorNew == InterruptFloorOld :
+			if len(MotionQueue) == 0:
+				ChangeDetected = 1
+
+			elif InterruptFloorNew == InterruptFloorOld :
 				ChangeDetected = 0
+
 			else:
 				ChangeDetected = 1
 				# InterruptFloorOld = InterruptFloorNew
+
 def popMotionQueue():
 	global MotionQueue
 	global LOCK
 	global InterruptFloorOld
 
-
-	LOCK = 1
-	MotionQueue.reverse()
-	MotionQueue.pop()
-	MotionQueue.reverse()
-
-	LOCK = 0
+	if len(MotionQueue) > 0:
+		LOCK = 1
+		MotionQueue.reverse()
+		MotionQueue.pop()
+		MotionQueue.reverse()
+		LOCK = 0
 
 def pinObjDecode(Object):
 			pin = str(Object)
@@ -85,7 +92,7 @@ class FLOOR:
 	def __init__(self, openR, closeR, cabinB, lift_FloorR):
 
 
-			# self.levelNum     =     floorNum
+			#self.levelNum     =     floorNum
 			self.openReed     =     machine.Pin(openR,  machine.Pin.IN, machine.Pin.PULL_DOWN)
 			self.closeReed    =     machine.Pin(closeR, machine.Pin.IN, machine.Pin.PULL_DOWN)
 			self.cabinCall    =     machine.Pin(cabinB, machine.Pin.IN, machine.Pin.PULL_DOWN)
@@ -118,48 +125,70 @@ class Motor:
 
   def liftPwm(self, motorTime, doorDuty, floo):
 	global Level
+	global speedTable
+	print("Heap Size {}".format(gc.mem_free()))
 	print("Lift Pwm Start")
-	pwm2 = machine.PWM(self.start, freq=4000, duty=doorDuty)
-	#
+
+
+	dutyPump = 0
+	UnitTimeDiv = int(motorTime/10)
 	t = time.ticks_ms()
 	deltaT = time.ticks_diff(time.ticks_ms(), t)
-	timeCond = floo.liftLocation.value() == 0
-	while (timeCond):
-		print("Lift Timer:{}".format(deltaT))
-		time.sleep_ms(400)
-		deltaT = time.ticks_diff(time.ticks_ms(), t)
-		timeCond = deltaT <= motorTime or floo.liftLocation.value() == 0
-		pass
 
+	pwm1 = machine.PWM(self.start, freq=4000, duty=0)
+	while not(deltaT >= motorTime or floo.liftLocation.value() == 1):
+		if deltaT > dutyPump*UnitTimeDiv:
+			doorDuty = int(speedTable[dutyPump])
+			pwm1 = machine.PWM(self.start, freq=4000, duty=doorDuty)
+			dutyPump += 1
+			print("Duty Pump: {}".format(dutyPump))
+		# print("Lift Timer:{}".format(deltaT))
+		# time.sleep_ms(100)
+		deltaT = time.ticks_diff(time.ticks_ms(), t)
+		# if deltaT <= motorTime or floo.liftLocation.value() == 1:
+		# 	break
+	print("Lift Timer:{}".format(deltaT))
+	duty = 0
 	print("Lift Pwm End")
 
-	return pwm2.deinit()
+	return pwm1.deinit()
+
   def doorPwm(self, motorTime, doorDuty,floorNumb):
 	global Level
 	print("Door Pwm Start")
 	self.Open()
+	print("Heap Size 1 {}".format(gc.mem_free()))
 	t = time.ticks_ms()
-	pwm1 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
-	while Level[floorNumb].openReed.value() == 0 or time.ticks_diff(time.ticks_ms(), t) < motorTime:
-		print("Door Open Timer:{}".format(t))
+	deltaT = time.ticks_diff(time.ticks_ms(), t)
+	pwm2 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
+	while not(deltaT >= motorTime or Level[floorNumb].openReed.value() == 1):
 		# print("Oppen Read Value {}".format(Level[floorNumb].openReed.value()))
 		time.sleep_ms(400)
-		pass
-	pwm1.deinit()
-	self.start.value(0)
+		deltaT = time.ticks_diff(time.ticks_ms(), t)
+		# print("Door Open Timer:{}".format(deltaT))
+	print("Heap Size 2 {}".format(gc.mem_free()))
+	print("Door Open Timer:{}".format(deltaT))
+	pwm2.deinit()
 
-	time.sleep_ms(3000)
+
+
+	time.sleep(3)
 
 	self.Close()
+	print("Heap Size 3 {}".format(gc.mem_free()))
 	t = time.ticks_ms()
+	deltaT = time.ticks_diff(time.ticks_ms(), t)
 	pwm3 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
-	while Level[floorNumb].closeReed.value() == 0 or time.ticks_diff(time.ticks_ms(), t) < motorTime:
+	while not(deltaT >= motorTime or Level[floorNumb].closeReed.value() == 1):
 		# print("Close Read Value {}".format(Level[floorNumb].closeReed.value()))
 		time.sleep_ms(400)
-		print("Door Close Timer:{}".format(t))
-		pass
+		deltaT = time.ticks_diff(time.ticks_ms(), t)
+		print("Door Close Timer:{}".format(deltaT))
+
+	print("Heap Size 4 {}".format(gc.mem_free()))
+	print("Door Close Timer:{}".format(deltaT))
 	pwm3.deinit()
-	print("Lift Pwm Start")
+	print("Door Pwm End")
 
 # def doorAction(motor,floor):
 # 	motor.Open()
@@ -172,19 +201,20 @@ class Motor:
 
 def addToMotionQueue(floorToAdd):
 	global MotionQueue
-	global LOCKING
+	global LOCK
+	global LOCKTIME
 
-	if LOCKING == 0:
-		LOCKING = 1
+	if LOCK == 0:
+		LOCK = 1
 		MotionQueue.append(floorToAdd)
-		LOCKING = 0
+		LOCK = 0
 
-	elif LOCKING == 1:
-		while LOCKING == 1:
-			time.sleep_ms(4)
-		LOCKING = 1
+	elif LOCK == 1:
+		while LOCK == 1:
+			time.sleep_ms(LOCKTIME)
+		LOCK = 1
 		MotionQueue.append(floorToAdd)
-		LOCKING = 0
+		LOCK = 0
 
 
 
@@ -245,25 +275,27 @@ cabinLoc = 0 										#cabin location
 Level[0].InitiateInterrupt()
 Level[1].InitiateInterrupt()
 Level[2].InitiateInterrupt()
+TimeTable = [3000, 5000 ,7000]
+speedTable = [20,150,180,350,450,449,349,179,149 ,20 ]
 
 _thread.start_new_thread(updateMotionQueueViaInterrupt, ())
 while True:
 	if len(MotionQueue) > 0:
 		print(MotionQueue)
 		floorButton = MotionQueue[0]
-
+		travelTime = TimeTable[int(math.fabs(floorButton-cabinLoc))]
 		if floorButton > cabinLoc:
 			# while(Level[floorButton].liftLocation.value() != 1):
 			print('going up')
 			MotorArray[3].Open() 				#Open = up
-			MotorArray[3].liftPwm(4000, 500, Level[floorButton])
+			MotorArray[3].liftPwm(travelTime, 500, Level[floorButton])
 			MotorArray[floorButton].doorPwm(3000, 250, floorButton)
 			cabinLoc = floorButton
 
 		elif floorButton < cabinLoc:
 			# while(Level[floorButton].liftLocation.value() != 1):
 			MotorArray[3].Close() 				#Close = down
-			MotorArray[3].liftPwm(5000, 500, Level[floorButton])
+			MotorArray[3].liftPwm(travelTime, 500, Level[floorButton])
 			MotorArray[floorButton].doorPwm(5000, 250, floorButton)
 			cabinLoc = floorButton
 
@@ -271,13 +303,14 @@ while True:
 			MotorArray[floorButton].doorPwm(5000, 250, floorButton)
 			cabinLoc = floorButton
 
-#CHECK LOCKING AND MODIFY MotionQueue
+#CHECK LOCK AND MODIFY MotionQueue
 
-		if LOCKING == 0:
+		if LOCK == 0:
 			popMotionQueue()
 			print(MotionQueue)
-		elif LOCKING == 1:
-			while LOCKING == 1:
-				time.sleep_ms(4)
+		elif LOCK == 1:
+			while LOCK == 1:
+				time.sleep_ms(LOCKTIME)
 			popMotionQueue()
 			print(MotionQueue)
+	gc.collect()
