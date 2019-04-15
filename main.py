@@ -157,7 +157,7 @@ class Motor:
 	global Level
 	print("Door Pwm Start")
 	self.Open()
-	print("Heap Size 1 {}".format(gc.mem_free()))
+	# print("Heap Size 1 {}".format(gc.mem_free()))
 	t = time.ticks_ms()
 	deltaT = time.ticks_diff(time.ticks_ms(), t)
 	pwm2 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
@@ -166,8 +166,8 @@ class Motor:
 		time.sleep_ms(400)
 		deltaT = time.ticks_diff(time.ticks_ms(), t)
 		# print("Door Open Timer:{}".format(deltaT))
-	print("Heap Size 2 {}".format(gc.mem_free()))
-	print("Door Open Timer:{}".format(deltaT))
+	# print("Heap Size 2 {}".format(gc.mem_free()))
+	print("Door Open Time:{}".format(deltaT))
 	pwm2.deinit()
 
 
@@ -175,7 +175,7 @@ class Motor:
 	time.sleep(3)
 
 	self.Close()
-	print("Heap Size 3 {}".format(gc.mem_free()))
+	# print("Heap Size 3 {}".format(gc.mem_free()))
 	t = time.ticks_ms()
 	deltaT = time.ticks_diff(time.ticks_ms(), t)
 	pwm3 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
@@ -183,12 +183,12 @@ class Motor:
 		# print("Close Read Value {}".format(Level[floorNumb].closeReed.value()))
 		time.sleep_ms(400)
 		deltaT = time.ticks_diff(time.ticks_ms(), t)
-		print("Door Close Timer:{}".format(deltaT))
+		# print("Door Close Timer:{}".format(deltaT))
 
-	print("Heap Size 4 {}".format(gc.mem_free()))
-	print("Door Close Timer:{}".format(deltaT))
+	# print("Heap Size 4 {}".format(gc.mem_free()))
+	print("Door Close Time:{}".format(deltaT))
 	pwm3.deinit()
-	print("Door Pwm End")
+	g# print("Door Pwm End")
 
 # def doorAction(motor,floor):
 # 	motor.Open()
