@@ -28,6 +28,15 @@ def callback(Object):
 			else:
 				ChangeDetected = 1
 				# InterruptFloorOld = InterruptFloorNew
+def popMotionQueue():
+    global MotionQueue
+    global LOCK
+
+    LOCK = 1
+    MotionQueue.reverse()
+    MotionQueue.pop()
+    MotionQueue.reverse()
+    LOCK = 0
 
 def pinObjDecode(Object):
 			pin = str(Object)
@@ -97,25 +106,56 @@ class Motor:
   def Open(self):
 	self.close.value(0)
 	self.open.value(1)
+	return 0
 
   def Close(self):
 	self.open.value(0)
 	self.close.value(1)
+	return 1
 
-  def Pwm(self, motorTime, doorDuty):
+  def liftPwm(self, motorTime, doorDuty, floo):
+	print("Lift Pwm Start")
+	pwm2 = machine.PWM(self.start, freq=4000, duty=doorDuty)
+	#
 	t = time.ticks_ms()
-	pwm1 = machine.PWM(self.start, freq=4000, duty=doorDuty)
-	while time.ticks_ms() - t < motorTime:
+	while Level[floo].liftLocation.value() == 0 or time.ticks_ms() - t < motorTime:
+		pass
+	pwm2.deinit()
+	print("Lift Pwm End")
+
+  def doorPwm(self, motorTime, doorDuty,floorNumb):
+
+	print("Door Pwm Start")
+	self.Open()
+	t = time.ticks_ms()
+	pwm1 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
+	while Level[floorNumb].openReed.value() == 0 or time.ticks_ms() - t < motorTime:
+
+		# print("Oppen Read Value {}".format(Level[floorNumb].openReed.value()))
+		time.sleep_ms(400)
 		pass
 	pwm1.deinit()
+	self.start.value(0)
 
-def doorAction(motor):
-	motor.Open()
-	#motor.Pwm(Pwn timer, Duty)
-	motor.Pwm(3000, 435)
-	time.sleep(4000)
-	motor.Close()
-	motor.Pwm(3000, 435)
+	time.sleep_ms(3000)
+
+	self.Close()
+	t = time.ticks_ms()
+	pwm3 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
+	while Level[floorNumb].closeReed.value() == 0 or time.ticks_ms() - t < motorTime:
+		# print("Close Read Value {}".format(Level[floorNumb].closeReed.value()))
+		time.sleep_ms(400)
+		pass
+	pwm3.deinit()
+	print("Lift Pwm Start")
+
+# def doorAction(motor,floor):
+# 	motor.Open()
+# 	#motor.Pwm(Pwn timer, Duty)
+# 	motor.doorPwm(3000, 435, Level[floor].liftLocation)
+# 	time.sleep(4000)
+# 	motor.Close()
+# 	motor.doorPwm(3000, 435 Level[floor].liftLocation)
 
 
 def addToMotionQueue(floorToAdd):
@@ -182,7 +222,7 @@ def updateMotionQueueViaInterrupt():
 #level[0] motor, level[1] motor,  level[2] motor,  #cabinmotion
 MotorArray = [Motor(2,4,16),Motor(2,4,21),Motor(2,4,23),Motor(2,4,22)]
 
-#(self, floorNum, openR, closeR, cabinB, floorB, lift_FloorR)
+#(self, openR, closeR, cabinB, lift_FloorR)
 Level = [ FLOOR(27, 12, 32, 26), FLOOR(25, 14, 33, 13), FLOOR(36, 39, 34, 35) ]
 
 L= [[27, 12, 32, 26],[25, 14, 33, 13],[36, 39, 34, 35]]
@@ -201,21 +241,22 @@ while True:
 		floorButton = MotionQueue[0]
 
 		if floorButton > cabinLoc:
-			while(Level[floorButton].liftLocation.value() != 1):
-				MotorArray[3].Open() 				#Open = up
-				MotorArray[3].Pwm(5000, 500)
-			doorAction(MotorArray[floorButton])
+			# while(Level[floorButton].liftLocation.value() != 1):
+			print('going up')
+			MotorArray[3].Open() 				#Open = up
+			MotorArray[3].liftPwm(5000, 500, floorButton)
+			MotorArray[floorButton].doorPwm(5000, 250, floorButton)
 			cabinLoc = floorButton
 
 		elif floorButton < cabinLoc:
-			while(Level[floorButton].liftLocation.value() != 1):
-				MotorArray[3].Close() 				#Close = down
-				MotorArray[3].Pwm(5000, 500)
-				doorAction(MotorArray[floorButton])
+			# while(Level[floorButton].liftLocation.value() != 1):
+			MotorArray[3].Close() 				#Close = down
+			MotorArray[3].liftPwm(5000, 500, floorButton)
+			MotorArray[floorButton].doorPwm(5000, 250, floorButton)
 			cabinLoc = floorButton
 
 		else:
-			doorAction(MotorArray[floorButton])
+			MotorArray[floorButton].doorPwm(5000, 250, floorButton)
 			cabinLoc = floorButton
 
 #CHECK LOCKING AND MODIFY MotionQueue
@@ -225,6 +266,6 @@ while True:
 			print(MotionQueue)
 		elif LOCKING == 1:
 			while LOCKING == 1:
-				pass
+				time.sleep_ms(20)
 			popMotionQueue()
 			print(MotionQueue)
