@@ -110,22 +110,19 @@ class FLOOR:
 	global InterruptFloorOld
 
 	def __init__(self, openR, closeR, cabinB, lift_FloorR):
-		"""
-		
-		"""
 
 
-			#self.levelNum     =     floorNum
-			self.openReed     =     machine.Pin(openR,  machine.Pin.IN, machine.Pin.PULL_DOWN)
-			self.closeReed    =     machine.Pin(closeR, machine.Pin.IN, machine.Pin.PULL_DOWN)
-			self.cabinCall    =     machine.Pin(cabinB, machine.Pin.IN, machine.Pin.PULL_DOWN)
-			# self.floorCall    =     machine.Pin(floorB, machine.Pin.IN, machine.Pin.PULL_DOWN)
-			self.liftLocation =     machine.Pin(lift_FloorR, machine.Pin.IN, machine.Pin.PULL_DOWN)
-			# self.pinMap       =     [floorNum, openR, closeR, cabinB, floorB, lift_FloorR]
-			# self.openReed.value()
-			# self.closeReed.value()
+		#self.levelNum     =     floorNum
+		self.openReed     =     machine.Pin(openR,  machine.Pin.IN, machine.Pin.PULL_DOWN)
+		self.closeReed    =     machine.Pin(closeR, machine.Pin.IN, machine.Pin.PULL_DOWN)
+		self.cabinCall    =     machine.Pin(cabinB, machine.Pin.IN, machine.Pin.PULL_DOWN)
+		# self.floorCall    =     machine.Pin(floorB, machine.Pin.IN, machine.Pin.PULL_DOWN)
+		self.liftLocation =     machine.Pin(lift_FloorR, machine.Pin.IN, machine.Pin.PULL_DOWN)
+		# self.pinMap       =     [floorNum, openR, closeR, cabinB, floorB, lift_FloorR]
+		# self.openReed.value()
+		# self.closeReed.value()
 
-			# self.liftLocation.value()
+		# self.liftLocation.value()
 	def InitiateInterrupt(self):
 			self.cabinCall.irq(trigger = machine.Pin.IRQ_RISING, handler=callback)
 			# self.floorCall.irq(trigger = machine.Pin.IRQ_RISING, handler=callback)
@@ -297,6 +294,7 @@ TimeTable = [3000, 5000 ,7000]
 speedTable = [20,150,180,350,450,449,349,179,149 ,20 ]
 dutyForDoor = 800
 _thread.start_new_thread(updateMotionQueueViaInterrupt, ())
+print("Program Start")
 while True:
 	if len(MotionQueue) > 0:
 		print(MotionQueue)
