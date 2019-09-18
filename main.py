@@ -3,6 +3,7 @@ import machine
 import time
 import _thread
 import math
+import gc
 
 # exec(open('/main.py').read().globals())
 
@@ -181,7 +182,7 @@ class Motor:
 		t = time.ticks_ms()
 		deltaT = time.ticks_diff(time.ticks_ms(), t)
 		pwm2 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
-		while not(deltaT >= motorTime or Level[floorNumb].openReed.value() == 1):
+		while not(deltaT >= motorTime or Level[floorNumb].openReed.value() == 0):
 			# print("Oppen Read Value {}".format(Level[floorNumb].openReed.value()))
 			time.sleep_ms(400)
 			deltaT = time.ticks_diff(time.ticks_ms(), t)
@@ -199,7 +200,7 @@ class Motor:
 		t = time.ticks_ms()
 		deltaT = time.ticks_diff(time.ticks_ms(), t)
 		pwm3 = machine.PWM(self.start, freq = 4000, duty=doorDuty)
-		while not(deltaT >= motorTime or Level[floorNumb].closeReed.value() == 1):
+		while not(deltaT >= motorTime or Level[floorNumb].closeReed.value() == 0):
 			# print("Close Read Value {}".format(Level[floorNumb].closeReed.value()))
 			time.sleep_ms(400)
 			deltaT = time.ticks_diff(time.ticks_ms(), t)
